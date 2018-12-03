@@ -20,15 +20,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace std;
 
-int main()
+void usage(char *progname)
+{
+  string pname(progname);
+  std::cerr << "Usage : " << pname.substr(pname.find_last_of("/")) << " config.json <MYSQL query>" << std::endl;
+  std::exit(1);
+}
+
+int main(int argc, char** argv)
 {
   try
   {
-    mariadb db("conf.json");
-    string table_name = "people";
+    string query, conf;
+    if( argc == 3 )
+    {
+      conf = argv[1];
+      query = argv[2];
+    }
+    else
+    {
+      usage(argv[0]);
+    }
+    mariadb db(conf);
 
     // default query, returns records as vector of vector of string
-    auto result = db.query("SELECT * FROM " + table_name + ";");
+    auto result = db.query(query);
     for(auto record : result)
     {
       for(auto field : record) cout << field << " - ";
@@ -36,7 +52,7 @@ int main()
     }
 
     // custom query, accept a lambda
-    db.query("SELECT * FROM " + table_name + ";", [&db](){
+    db.query(query, [&db](){
       MYSQL_FIELD *field;
       auto colnum = mysql_num_fields(db.res);
 
